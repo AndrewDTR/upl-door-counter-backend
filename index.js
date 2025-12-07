@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3500;
 const apiUrl = process.env.API_URL;
 const token = process.env.TOKEN;
 
-app.use(cors());
+let doorState = undefined;
 
-app.get("/door-status", async (req, res) => {
+async function fetch() {
     try {
         const response = await axios.get(apiUrl, {
             headers: {
@@ -35,11 +35,25 @@ app.get("/door-status", async (req, res) => {
             last_updated: door.last_updated
         }
 
-        // send the filtered data as a json response
-        res.json(doorReturn);
-    } catch (error) {
-        res.status(500).send("Error fetching data");
+        doorState = doorReturn;
+    } catch {
+        console.log("Error when fetching")
     }
+}
+
+app.use(cors());
+
+app.get("/door-status", async (req, res) => {
+    if (doorState === undefined) {
+        await fetch();
+    }
+
+    res.json(doorState);
+});
+
+app.get("/fetch", async (req, res) => {
+    await fetch();
+    res.send().status(200)
 });
 
 // :P
