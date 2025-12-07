@@ -51,9 +51,9 @@ app.get("/door-status", async (req, res) => {
     res.json(doorState);
 });
 
-app.get("/fetch", async (req, res) => {
+app.post("/fetch", async (req, res) => {
     await fetch();
-    res.send().status(200)
+    res.sendStatus(200);
 });
 
 // :P
