@@ -11,6 +11,11 @@ const token = process.env.TOKEN;
 
 let doorState = undefined;
 
+// manually check every 5 mins
+setInterval(async () => {
+    await fetch();
+}, (1000 * 60 * 5));
+
 async function fetch() {
     try {
         const response = await axios.get(apiUrl, {
@@ -37,7 +42,8 @@ async function fetch() {
 
         doorState = doorReturn;
     } catch {
-        console.log("Error when fetching")
+        console.log("Error when fetching");
+        doorState = undefined;
     }
 }
 
