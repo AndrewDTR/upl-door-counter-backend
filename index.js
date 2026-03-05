@@ -3,6 +3,7 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const cron = require("node-cron");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3500;
@@ -11,16 +12,22 @@ const token = process.env.TOKEN;
 
 let doorState = undefined;
 let doorUpdates = [];
+const UPDATES_FILE = "doorUpdates.json";
+
 
 // manually check every 5 mins
 setInterval(async () => {
     await fetch();
 }, (1000 * 60 * 5));
 
+if (fs.existsSync(UPDATES_FILE)) {
+    doorUpdates = JSON.parse(fs.readFileSync(UPDATES_FILE));
+}
 
 cron.schedule("0 0 * * *", () => {
     doorUpdates = [];
-});
+    fs.writeFileSync(UPDATES_FILE, JSON.stringify(doorUpdates));
+}, { timezone: "America/Chicago" });
 
 async function fetch() {
     try {
@@ -46,8 +53,9 @@ async function fetch() {
             last_updated: door.last_updated
         }
 
-        if (doorState?.status != doorReturn?.status) {
+        if (doorState?.status !== doorReturn?.status) {
             doorUpdates.push(doorReturn);
+            fs.writeFileSync(UPDATES_FILE, JSON.stringify(doorUpdates));
         }
 
         doorState = doorReturn;
