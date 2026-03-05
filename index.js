@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-
+const cron = require("node-cron");
 
 const app = express();
 const PORT = process.env.PORT || 3500;
@@ -10,11 +10,17 @@ const apiUrl = process.env.API_URL;
 const token = process.env.TOKEN;
 
 let doorState = undefined;
+let doorUpdates = [];
 
 // manually check every 5 mins
 setInterval(async () => {
     await fetch();
 }, (1000 * 60 * 5));
+
+
+cron.schedule("0 0 * * *", () => {
+    doorUpdates = [];
+});
 
 async function fetch() {
     try {
@@ -40,6 +46,10 @@ async function fetch() {
             last_updated: door.last_updated
         }
 
+        if (doorState?.status != doorReturn?.status) {
+            doorUpdates.push(doorReturn);
+        }
+
         doorState = doorReturn;
     } catch {
         console.log("Error when fetching");
@@ -60,6 +70,10 @@ app.get("/door-status", async (req, res) => {
 app.post("/fetch", async (req, res) => {
     await fetch();
     res.sendStatus(200);
+});
+
+app.get("/day", async (req, res) => {
+    res.json(doorUpdates);
 });
 
 // :P
