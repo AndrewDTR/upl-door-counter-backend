@@ -27,9 +27,11 @@ if (fs.existsSync(UPDATES_FILE)) {
     }
 }
 
-cron.schedule("0 0 * * *", () => {
+cron.schedule("0 0 * * *", async () => {
     doorUpdates = [];
+    doorState = undefined;
     fs.writeFileSync(UPDATES_FILE, JSON.stringify(doorUpdates));
+    await doorFetch();
 }, { timezone: "America/Chicago" });
 
 cron.schedule("59 23 * * *", async () => {
