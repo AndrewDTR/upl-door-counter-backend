@@ -100,6 +100,15 @@ app.get("/", async (req, res) => {
         .send("<html><body><b>wow upl door status endpoint 443</b></body></html>");
 });
 
+app.post("/inject", express.json(), (req, res) => {
+    doorUpdates = req.body;
+    if (doorUpdates.length > 0) {
+        doorState = doorUpdates[doorUpdates.length - 1];
+    }
+    fs.writeFileSync(UPDATES_FILE, JSON.stringify(doorUpdates));
+    res.sendStatus(200);
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
