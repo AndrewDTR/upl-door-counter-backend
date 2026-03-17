@@ -17,7 +17,7 @@ const UPDATES_FILE = "doorUpdates.json";
 
 // manually check every 5 mins
 setInterval(async () => {
-    await fetch();
+    await doorFetch();
 }, (1000 * 60 * 5));
 
 if (fs.existsSync(UPDATES_FILE)) {
@@ -32,7 +32,11 @@ cron.schedule("0 0 * * *", () => {
     fs.writeFileSync(UPDATES_FILE, JSON.stringify(doorUpdates));
 }, { timezone: "America/Chicago" });
 
-async function fetch() {
+cron.schedule("59 23 * * *", async () => {
+    await fetch("https://printer.amoses.dev/upl")
+}, { timezone: "America/Chicago" });
+
+async function doorFetch() {
     try {
         const response = await axios.get(apiUrl, {
             headers: {
@@ -72,14 +76,14 @@ app.use(cors());
 
 app.get("/door-status", async (req, res) => {
     if (doorState === undefined) {
-        await fetch();
+        await doorFetch();
     }
 
     res.json(doorState);
 });
 
 app.post("/fetch", async (req, res) => {
-    await fetch();
+    await doorFetch();
     res.sendStatus(200);
 });
 
@@ -92,18 +96,6 @@ app.get("/", async (req, res) => {
     res
         .status(200)
         .send("<html><body><b>wow upl door status endpoint 443</b></body></html>");
-});
-
-app.get("daybreak", async (req, res) => {
-    let hours = Array(24).fill(0);
-
-    for (const update of doorUpdates) {
-        if (update.status === "open") {
-            const rel = new Date(update?.last_updated);
-
-            hours[rel.getHours()] = 1;
-        }
-    }
 });
 
 app.listen(PORT, () => {
