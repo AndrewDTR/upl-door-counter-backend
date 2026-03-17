@@ -22,6 +22,9 @@ setInterval(async () => {
 
 if (fs.existsSync(UPDATES_FILE)) {
     doorUpdates = JSON.parse(fs.readFileSync(UPDATES_FILE));
+    if (doorUpdates.length > 0) {
+        doorState = doorUpdates[doorUpdates.length - 1];
+    }
 }
 
 cron.schedule("0 0 * * *", () => {
@@ -89,6 +92,18 @@ app.get("/", async (req, res) => {
     res
         .status(200)
         .send("<html><body><b>wow upl door status endpoint 443</b></body></html>");
+});
+
+app.get("daybreak", async (req, res) => {
+    let hours = Array(24).fill(0);
+
+    for (const update of doorUpdates) {
+        if (update.status === "open") {
+            const rel = new Date(update?.last_updated);
+
+            hours[rel.getHours()] = 1;
+        }
+    }
 });
 
 app.listen(PORT, () => {
